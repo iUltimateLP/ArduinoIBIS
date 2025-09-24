@@ -64,12 +64,8 @@ void ArduinoIBIS::Port::SetDebugOutput(bool enable, Stream* outputStream)
 void ArduinoIBIS::Port::DS010e(const char* sign, uint16_t delay)
 {
 	char buf[IBIS_TELEGRAM_BUFFER_SIZE];
-	int len = sprintf(buf, "xV%.1s%03d", sign, delay);
-
-	String telegram;
-	telegram.concat(buf, len);
-
-	SendTelegram(telegram);
+	printf(buf, "xV%.1s%03d", sign, delay);
+	SendTelegram(buf);
 }
 
 void ArduinoIBIS::Port::DS003a(const String& text)
