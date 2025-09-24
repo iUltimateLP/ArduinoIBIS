@@ -1,4 +1,25 @@
 ﻿// ArduinoIBIS
+// Implementation of the VDV 300 IBIS Wagenbus protocol for Arduino and Arduino-core based devices
+
+// Copyright (c) 2025 Jonathan Verbeek
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
 
 #include "ArduinoIBIS.h"
 
@@ -7,7 +28,7 @@ bool ArduinoIBIS::Port::Begin(int8_t txPin, int8_t rxPin, bool invert)
 	// Don't do anything if there's already a port created
 	if (_port != nullptr)
 	{
-		if (_debug) Serial.println("ArduinoIBIS: Cannot begin port as there's a SoftwareSerial open");
+		if (_debug) _debugOutput->println("ArduinoIBIS: Cannot begin port as there's a SoftwareSerial open");
 		return false;
 	}
 
@@ -17,10 +38,11 @@ bool ArduinoIBIS::Port::Begin(int8_t txPin, int8_t rxPin, bool invert)
 	if ((*_port) == false)
 	{
 		// The port has failed to initialize
-		if (_debug) Serial.print("ArduinoIBIS: Failed to begin SoftwareSerial port");
+		if (_debug) _debugOutput->println("ArduinoIBIS: Failed to begin SoftwareSerial port");
 		return false;
 	}
 
+	if (_debug) _debugOutput->println("ArduinoIBIS: Successfully created IBIS port");
 	return true;
 }
 
@@ -33,9 +55,10 @@ void ArduinoIBIS::Port::End()
 	}
 }
 
-void ArduinoIBIS::Port::SetEnableDebugOutput(bool enable)
+void ArduinoIBIS::Port::SetDebugOutput(bool enable, Stream* outputStream)
 {
 	_debug = enable;
+	_debugOutput = outputStream;
 }
 
 void ArduinoIBIS::Port::DS010e(const char* sign, uint16_t delay)
@@ -153,7 +176,7 @@ void ArduinoIBIS::Port::SendTelegram(String telegram)
 {
 	if (_port == nullptr)
 	{
-		if (_debug) Serial.println("ArduinoIBIS: Cannot send, port is null!");
+		if (_debug) _debugOutput->println("ArduinoIBIS: Cannot send, port is null!");
 		return;
 	}
 
@@ -170,7 +193,7 @@ void ArduinoIBIS::Port::SendTelegram(String telegram)
 	telegram.replace("Ü", "]");
 
 	// Add a CR character at the end
-	telegram.concat(static_cast<char>(0x0D));
+	telegram.concat('\x0d');
 
 	// Calculate the telegram checksum by XOR-ing every byte, starting at 0x7F, and append it to the telegram
 	char checksum = 0x7F;
@@ -183,26 +206,26 @@ void ArduinoIBIS::Port::SendTelegram(String telegram)
 	// Debug print the whole telegram
 	if (_debug)
 	{
-		Serial.print("ArduinoIBIS: Sending telegram with length=");
-		Serial.print(telegram.length());
-		Serial.print(" checksum=0x");
+		_debugOutput->print("ArduinoIBIS: Sending telegram with length=");
+		_debugOutput->print(telegram.length());
+		_debugOutput->print(" checksum=0x");
 		if (checksum < 10)
 		{
-			Serial.print("0");
+			_debugOutput->print("0");
 		}
-		Serial.print(checksum, HEX);
-		Serial.print(": ");
+		_debugOutput->print(checksum, HEX);
+		_debugOutput->print(": ");
 
 		for (unsigned int i = 0; i < telegram.length(); i++)
 		{
 			if (telegram.charAt(i) < 0x10)
 			{
-				Serial.print("0");
+				_debugOutput->print("0");
 			}
-			Serial.print(telegram.charAt(i), HEX);
-			Serial.print(" ");
+			_debugOutput->print(telegram.charAt(i), HEX);
+			_debugOutput->print(" ");
 		}
-		Serial.println();
+		_debugOutput->println();
 	}
 
 	// Finally send the fully wrapped telegram through the serial port

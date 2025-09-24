@@ -28,7 +28,7 @@
 #define IBIS_BAUD 1200
 #define IBIS_SERIAL_CONFIG SWSERIAL_7E2
 
-// Most telegrams don't have a more complex structure and can therefore be constructed with a simple printf string only
+// Most telegrams don't have a complex structure and can therefore be constructed with a simple format string only
 // Hence, IBIS_SIMPLE_TELEGRAM can be used to declare those
 #define IBIS_TELEGRAM_BUFFER_SIZE 64
 #define IBIS_SIMPLE_TELEGRAM(id, argType, fmt) \
@@ -48,17 +48,19 @@ namespace ArduinoIBIS
 	class Port
 	{
 	public:
-		// Opens the software serial port for IBIS communication
+		// Opens the IBIS serial port for communication
+		// Optionally, the IBIS signal can be inverted (might be required for certain hardware)
 		bool Begin(int8_t txPin = 12, int8_t rxPin = -1, bool invert = false);
 
-		// Closes the software serial port
+		// Closes the IBIS serial port
 		void End();
 
 		// When enabled, the library prints debug output to the hardware Serial interface (which still needs to be
-		// initialized by you)
-		void SetEnableDebugOutput(bool enable);
+		// initialized by you). Optionally, you can specify the output stream to print debug info to
+		void SetDebugOutput(bool enable, Stream* outputStream = &Serial);
 
 	public:
+		// Simple telegram declarations
 		IBIS_SIMPLE_TELEGRAM(001, uint16_t, "l%03d"); // Line Number, 1-3 digits
 		IBIS_SIMPLE_TELEGRAM(001neu, uint16_t, "q%04d"); // Line number, alphanumeric, 1-4 chars
 		IBIS_SIMPLE_TELEGRAM(001a, uint8_t, "lE%02d"); // Line number symbol, 1-2 digits
@@ -94,6 +96,8 @@ namespace ArduinoIBIS
 		IBIS_SIMPLE_TELEGRAM(010b, uint8_t, "xI%02d"); // Line progress display stop ID, 1-2 digits
 		IBIS_SIMPLE_TELEGRAM(010d, uint16_t, "xJ%04d"); // Year, YYYY
 
+	public:
+		// Extended telegram declarations
 		void DS010e(const char* sign, uint16_t delay); // Delay, sign is either '+' or '-', delay is 1-3 digits
 
 		void DS003a(const String& text); // Destination text
@@ -105,7 +109,7 @@ namespace ArduinoIBIS
 		void GSP(uint8_t address, String line1, String line2);
 
 	private:
-		// Wraps the telegram with required extra data and sends it to the serial port
+		// Wraps the telegram with the required extra data and sends it to the serial port
 		void SendTelegram(String telegram);
 
 		// Converts a uint8 value to a VDV hex string
@@ -115,7 +119,8 @@ namespace ArduinoIBIS
 		// Internal handle to the software serial port
 		EspSoftwareSerial::UART* _port = nullptr;
 
-		// Whether to print debug output to Serial0
+		// Whether to print debug output
 		bool _debug = false;
+		Stream* _debugOutput = nullptr;
 	};
 }
