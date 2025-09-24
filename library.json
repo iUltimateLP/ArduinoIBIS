@@ -1,0 +1,26 @@
+﻿{
+  "name": "ArduinoIBIS",
+  "version": "1.0.0",
+  "description": "Implementation of the VDV 300 IBIS Wagenbus protocol for Arduino and Arduino-core based devices",
+  "keywords": "serial, ibis, uart, io, protocol",
+  "repository":
+  {
+    "type": "git",
+    "url": "https://github.com/iUltimateLP/ArduinoIBIS.git"
+  },
+  "authors":
+  [
+    {
+      "name": "Jonathan Verbeek",
+      "email": "hello@jverbeek.de",
+      "url": "https://github.com/iUltimateLP"
+    }
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/iUltimateLP/ArduinoIBIS.git",
+  "dependencies": {
+    "plerup/EspSoftwareSerial": "^8.2.0"
+  },
+  "frameworks": "arduino",
+  "platforms": "*"
+}
